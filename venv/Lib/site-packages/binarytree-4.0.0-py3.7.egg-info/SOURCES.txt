@@ -1,0 +1,12 @@
+LICENSE
+MANIFEST.in
+README.rst
+setup.cfg
+setup.py
+binarytree/__init__.py
+binarytree/exceptions.py
+binarytree/version.py
+binarytree.egg-info/PKG-INFO
+binarytree.egg-info/SOURCES.txt
+binarytree.egg-info/dependency_links.txt
+binarytree.egg-info/top_level.txt
