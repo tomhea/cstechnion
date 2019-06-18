@@ -1,23 +1,25 @@
 from itertools import product
 from cstechnion.automata.DFA import DFA
-from copy import deepcopy
+from cstechnion.automata.NFA import NFA
 from cstechnion.kombi.kombi import subgroups, subgroups_with_elements_of
 
 
-class NFA:  # Deterministic Finite Automation
+class NFAe:  # Deterministic Finite Automation
     def __init__(self, Q, S, q0, d, F):
         """
             Q  = States (iterable)
             S  = Alphabet (string)
             q0 = start-state
-            d  = Transition-Function (d: Q×S -> 2^Q) (2^Q is a set(q∈Q))
+            d  = Transition-Function (d: Q×(S∪{ε}) -> 2^Q) (2^Q is a set(q∈Q))
             F  = Accept-States
+            _CLe = ε-Closure (dictionary of sets)
         """
         self.Q = list(Q)
         self.S = S
         self.q0 = q0
         self.d = d
         self.F = list(F)
+        self._CLe = self._create_CLe_dict()     # TODO: when finished - check that all functions changing the NFAe, calling _create_CLe_dict.
 
     def __len__(self):
         return len(self.Q)      # number of states
@@ -33,11 +35,11 @@ class NFA:  # Deterministic Finite Automation
         return False                # new_q ∩ F = ∅
 
     def d_hat(self, q, w):    # δ^(q, w) # w = ua (u∈Σ*, a∈Σ)
-        new_states = {q}  # new_q = q0
+        new_states = self.CLe(q)  # new_q = q0
         for a in w:  # for every letter a in w:
             old_states, new_states = new_states, set()
             for q in old_states:
-                new_states.update(self.d(q, a))  # new_states += δ(q, a)
+                new_states.update(self.CLe_hat(self.d(q, a)))  # new_states += CLε^(δ(q, a))
         return new_states
 
     def d_hat_hat(self, p, w):      # δ^^(P, w)
@@ -46,10 +48,22 @@ class NFA:  # Deterministic Finite Automation
             new_states = new_states.union(self.d_hat(q, w))     # new_states += δ^(q, w)
         return new_states
 
+    def _create_CLe_dict(self):     # TODO: do it in algorithmic way (create ε graph, and return all reachable states)
+        return {q:{q} for q in self.Q}
+
+    def CLe(self, q):
+        return self._CLe[q]
+
+    def CLe_hat(self, p):
+        new_states = set()
+        for q in p:  # for every q∈P:
+            new_states = new_states.union(self.CLe(q))  # new_states += CLε(q)
+        return new_states
+
     def __contains__(self, w):
         return self.accept(w)
 
-    def get_Ln(self, n, prefix=''):     # TODO: try to do it in graphical-BFS way
+    def get_Ln(self, n, prefix=''):     # TODO: try to do it in graphical-BFS way. # MAYBE create equivalent NFA without ε and use it.
         """ return all the (up to n letters) words in L
             if prefix entered,
                 return all the words of the form [prefix][Σ*], such as the second part is up to n letters """
@@ -61,7 +75,7 @@ class NFA:  # Deterministic Finite Automation
                     Ln.append(w)
         return Ln
 
-    def get_L(self, prefix=''):         # TODO: try to do it in graphical-BFS way
+    def get_L(self, prefix=''):         # TODO: try to do it in graphical-BFS way. # MAYBE create equivalent NFA without ε and use it.
         """ generate the next word in L alphabetically
             if prefix entered, generate words of the form: [prefix][Σ*] """
         n = 0
@@ -72,7 +86,7 @@ class NFA:  # Deterministic Finite Automation
                     yield w
             n += 1
 
-    def _first_pre_name(self):        # get first prefix (of the form _*_pre) that is not used by any string state
+    def _first_pre_name(self):  # get first prefix (of the form _*_pre) that is not used by any string state
         count = 0
         _pre = 'pre'
         while True:
@@ -85,7 +99,7 @@ class NFA:  # Deterministic Finite Automation
                 return _pre
             count = 0
 
-    def add_prefix(self, w):    # TODO: change from DFA implementation to NFA implementation (i.e remove garbage_q state,...)
+    def add_prefix(self, w):    # TODO: change from DFA implementation to NFAe implementation (i.e remove garbage_q state,...) - change it in NFA and copy to here
         if len(w) > 0:
             _pre = self._first_pre_name()
             new_d = {}
@@ -104,23 +118,16 @@ class NFA:  # Deterministic Finite Automation
             self.q0 = new_q0
             self.S += new_letters
 
-    def __deepcopy__(self):
-        new_Q = deepcopy(self.Q)
-        new_S = deepcopy(self.S)
-        new_q0 = deepcopy(self.q0)
-        new_d_dict = {(q, a): self.d(q, a) for q in self.Q for a in self.S}
-        new_d = lambda q, a: new_d_dict[q, a]
-        new_F = deepcopy(self.F)
+    def to_NFA(self):               # TODO: really change to NFA (lose ε, from Lectures)
+        new_Q = subgroups(self.Q)
+        new_S = self.S
+        new_q0 = {self.q0}
+        new_d = self.d_hat_hat
+        new_F = subgroups_with_elements_of(self.Q, self.F)
         return NFA(new_Q, new_S, new_q0, new_d, new_F)
 
     def to_DFA(self):
-        copied = self.__deepcopy__()
-        new_Q  = subgroups(copied.Q)
-        new_S  = copied.S
-        new_q0 = {copied.q0}
-        new_d  = copied.d_hat_hat
-        new_F  = subgroups_with_elements_of(copied.Q, copied.F)
-        return DFA(new_Q, new_S, new_q0, new_d, new_F)
+        return self.to_NFA().to_DFA()
 
 
 """
@@ -141,7 +148,7 @@ def _test():
             return {1}
         return set()
 
-    A = NFA([0, 1], '01', 0, d, [1])
+    A = NFAe([0, 1], '01', 0, d, [1])
     print('' in A)
     print(A.d_hat(A.q0, ''))
     # print('11' in A)
@@ -162,17 +169,6 @@ def _test():
     print('101' in DA)
     print(DA.d_hat(DA.q0, '101'))
     print(DA.get_Ln(4), '\n')
-
-    # A.d = lambda q,a:{q}          # Checks if changes in A.d not affect d_hat_hat (i.e. DA.d)
-    # print('' in DA)
-    # print(DA.d_hat(DA.q0, ''))
-    # # print('11' in DA)
-    # # print(DA.d_hat(DA.q0, '11'))
-    # # print('10' in DA)
-    # # print(DA.d_hat(DA.q0, '10'))
-    # print('101' in DA)
-    # print(DA.d_hat(DA.q0, '101'))
-    # print(DA.get_Ln(4), '\n')
 
     # for q in DA.Q:
     #     for a in DA.S:

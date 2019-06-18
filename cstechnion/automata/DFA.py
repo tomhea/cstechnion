@@ -23,7 +23,7 @@ class DFA:  # Deterministic Finite Automation
         """ should 1. delete not-reachable states, and
                    2. remove identical states: q,p≠q0 equals if: d(q,a)=d(p,a) for all a∈Σ, and) q∈F iff q∈F
                    3. change states names to integers from range(0, len(self.Q)) """
-        pass  # TODO realy do something
+        pass  # TODO really do something
 
     def accept(self, w):
         return self.d_hat(self.q0, w) in self.F      # δ^(q0, w)∈F
@@ -59,7 +59,7 @@ class DFA:  # Deterministic Finite Automation
                     yield w
             n += 1
 
-    def _first_pre_name(self):
+    def _first_pre_name(self):    # get first prefix (of the form _*_pre) that is not used by any string state
         count = 0
         _pre = 'pre'
         while True:
