@@ -78,7 +78,7 @@ def subgroups_with_elements_of(g, elements):
 
 def n_letter_words(S, n):
     words = []
-    for w in product(S, n):
+    for w in product(S, repeat=n):
         words.append(''.join(w))
     return words
 
