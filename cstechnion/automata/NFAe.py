@@ -1,7 +1,7 @@
 from itertools import product
-from cstechnion.automata.DFA import DFA
+
 from cstechnion.automata.NFA import NFA
-from cstechnion.kombi.kombi import subgroups, subgroups_with_elements_of
+from cstechnion.kombi.Basics import subgroups, subgroups_with_elements_of
 
 
 class NFAe:  # Deterministic Finite Automation
@@ -48,7 +48,7 @@ class NFAe:  # Deterministic Finite Automation
             new_states = new_states.union(self.d_hat(q, w))     # new_states += δ^(q, w)
         return new_states
 
-    def _create_CLe_dict(self):     # TODO: do it in algorithmic way (create ε graph, and return all reachable states)
+    def _create_CLe_dict(self):     # TODO: do it in algorithmic way (create ε-edges graph, and return all reachable states, BFS)
         return {q:{q} for q in self.Q}
 
     def CLe(self, q):
@@ -100,6 +100,8 @@ class NFAe:  # Deterministic Finite Automation
             count = 0
 
     def add_prefix(self, w):    # TODO: change from DFA implementation to NFAe implementation (i.e remove garbage_q state,...) - change it in NFA and copy to here
+                        # for every v in self, wv in new_self
+                        # for example [even #0].add_prefix('tom') = (tom, tom1, tom00, tom11, tom100, tom010, tom001, ...)
         if len(w) > 0:
             _pre = self._first_pre_name()
             new_d = {}
@@ -109,7 +111,7 @@ class NFAe:  # Deterministic Finite Automation
             for i in range(1, len(w)):
                 last_q, curr_q = curr_q, _pre + str(i)
                 self.Q.append(curr_q)
-                new_d[last_q, w[i - 1]] = {curr_q}
+                new_d[last_q, w[i - 1]] = {curr_q}      # q_i-1 --[W_i-1]--> q_i
             new_d[curr_q, w[-1]] = {self.q0}
 
             new_letters = ''.join([a for a in dict.fromkeys(w) if a not in self.S])
@@ -139,71 +141,5 @@ TODO:
 """
 
 
-def _test():
-
-    def d(q, a):
-        if a == '0':
-            return {0}
-        if q == 0:
-            return {1}
-        return set()
-
-    A = NFAe([0, 1], '01', 0, d, [1])
-    print('' in A)
-    print(A.d_hat(A.q0, ''))
-    # print('11' in A)
-    # print(A.d_hat(A.q0, '11'))
-    # print('10' in A)
-    # print(A.d_hat(A.q0, '10'))
-    print('101' in A)
-    print(A.d_hat(A.q0, '101'))
-    print(A.get_Ln(4), '\n')
-
-    DA = A.to_DFA()
-    print('' in DA)
-    print(DA.d_hat(DA.q0, ''))
-    # print('11' in DA)
-    # print(DA.d_hat(DA.q0, '11'))
-    # print('10' in DA)
-    # print(DA.d_hat(DA.q0, '10'))
-    print('101' in DA)
-    print(DA.d_hat(DA.q0, '101'))
-    print(DA.get_Ln(4), '\n')
-
-    # for q in DA.Q:
-    #     for a in DA.S:
-    #         print('d({}, {}) = {}'.format(q, a, DA.d(q, a)))
-
-    # print('d^^({}, {}) = {}'.format(DA.q0, '11', DA.d_hat(DA.q0, '11')))
-    # print(DA.F)
-    print(len(DA.get_Ln(5))+1)
-
-    A.add_prefix('tom')
-    print(A.Q)
-    print(A.S)
-    print(A.q0)
-    print(A.F)
-    # for q in A.Q:
-    #     for a in A.S:
-    #         print('d({}, {}) = {}'.format(q, a, A.d(q, a)))
-    print(A.get_Ln(7))
-    print(A.get_Ln(4, 'tom'))
-
-    A.add_prefix('tom')
-    print(A.Q)
-    print(A.S)
-    print(A.q0)
-    print(A.F)
-    # for q in A.Q:
-    #     for a in A.S:
-    #         print('d({}, {}) = {}'.format(q, a, A.d(q, a)))
-    print(A.get_Ln(7))
-    print(A.get_Ln(4, 'tomtom'))
-
-    DA = A.to_DFA()
-    print(DA.get_Ln(7))
-    print(DA.get_Ln(4, 'tomtom'))
-
-
 if __name__ == '__main__':
-    _test()
+    pass

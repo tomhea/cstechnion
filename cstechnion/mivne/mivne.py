@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+
 class BinTree:
     def __init__(self, key, value, left=None, right=None):
         self.key = key
@@ -5,10 +8,10 @@ class BinTree:
         self.left = left
         self.right = right
 
-    def copy(self):
-        left = self.left.copy() if self.left else None
-        right = self.right.copy() if self.right else None
-        return BinTree(self.key, self.value, left, right)
+    def __deepcopy__(self, memo={}):
+        left = deepcopy(self.left) if self.left else None
+        right = deepcopy(self.right) if self.right else None
+        return BinTree(deepcopy(self.key), deepcopy(self.value), left, right)
 
     def pre_order(self):
         return [(self.key, self.value)] + \
@@ -20,7 +23,13 @@ class BinTree:
                [(self.key, self.value)] + \
                (self.right.in_order() if self.right else [])
 
+    def post_order(self):
+        return self.left.post_order() if self.left else [] + \
+               self.right.post_order() if self.right else [] + \
+               [(self.key, self.value)]
+
     def leaf_bin_keys(self, bin_prefix=''):
+        """ get binary path (0 for Left, 1 for Right) to all leafs (in order), with the leafs' values """
         if self.left or self.right:
             leafs = []
             if self.left:
@@ -31,12 +40,7 @@ class BinTree:
         else:
             return [(self.value, bin_prefix)]
 
-    def post_order(self):
-        return self.left.post_order() if self.left else [] + \
-               self.right.post_order() if self.right else [] + \
-               [(self.key, self.value)]
-
-    def insert(self, node):
+    def insert(self, node):     # binary insertion to binary tree, with node.key as key.
         if isinstance(node, tuple):
             key, value = node
             node = BinTree(key, value)
@@ -57,7 +61,7 @@ class BinTree:
         return self
 
     def __add__(self, other):
-        res = self.copy()
+        res = deepcopy(self)
         res += other
         return res
 
@@ -74,10 +78,13 @@ class BinTree:
 """ 
 TODO:
     add AVL_Tree
-    add Heap (do the heapq: heapify, heappop, heappush..)
+    add general RANK_Tree
+    add HashTables (chain hashing, skip-hashing)
     add UnionFind
-    add Trie
+    add Heap (do the heapq: heapify, heappop, heappush..)
+    add bucket/radix/heap/quick_sort
+    add Get Median in O(n), select[i] in O(n)
+    add Trie, Suffix tree (and several-words-Suffix_Tree)
+    add Ziv-Lempel (tirgul 12) 
     add topological sort (to graphs)
-    add Get Median in O(n), partition-sort
-    
 """

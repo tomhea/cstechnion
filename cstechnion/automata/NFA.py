@@ -1,7 +1,8 @@
-from itertools import product
-from cstechnion.automata.DFA import DFA
 from copy import deepcopy
-from cstechnion.kombi.kombi import subgroups, subgroups_with_elements_of
+from itertools import product
+
+from cstechnion.automata.DFA import DFA
+from cstechnion.kombi.Basics import subgroups, subgroups_with_elements_of
 
 
 class NFA:  # Deterministic Finite Automation
@@ -23,6 +24,10 @@ class NFA:  # Deterministic Finite Automation
         return len(self.Q)      # number of states
 
     def minimize(self):
+        """ should 1. delete not-reachable states, and
+                           2. remove identical states: q,p≠q0 equals if: d(q,a)=d(p,a) for all a∈Σ, and) q∈F iff q∈F
+                           3. change states names to integers from range(0, len(self.Q))
+                           4. find out about good algorithm for minimizing an Automata """
         pass  # TODO really do something
 
     def accept(self, w):
@@ -85,7 +90,8 @@ class NFA:  # Deterministic Finite Automation
                 return _pre
             count = 0
 
-    def add_prefix(self, w):    # TODO: change from DFA implementation to NFA implementation (i.e remove garbage_q state,...)
+    def add_prefix(self, w):    # for every v in self, wv in new_self
+                                # for example [even #0].add_prefix('tom') = (tom, tom1, tom00, tom11, tom100, tom010, tom001, ...)
         if len(w) > 0:
             _pre = self._first_pre_name()
             new_d = {}
@@ -95,7 +101,7 @@ class NFA:  # Deterministic Finite Automation
             for i in range(1, len(w)):
                 last_q, curr_q = curr_q, _pre + str(i)
                 self.Q.append(curr_q)
-                new_d[last_q, w[i - 1]] = {curr_q}
+                new_d[last_q, w[i - 1]] = {curr_q}      # q_i-1 --[W_i-1]--> q_i
             new_d[curr_q, w[-1]] = {self.q0}
 
             new_letters = ''.join([a for a in dict.fromkeys(w) if a not in self.S])
@@ -104,7 +110,7 @@ class NFA:  # Deterministic Finite Automation
             self.q0 = new_q0
             self.S += new_letters
 
-    def __deepcopy__(self):
+    def __deepcopy__(self, memo={}):
         new_Q = deepcopy(self.Q)
         new_S = deepcopy(self.S)
         new_q0 = deepcopy(self.q0)
@@ -114,12 +120,13 @@ class NFA:  # Deterministic Finite Automation
         return NFA(new_Q, new_S, new_q0, new_d, new_F)
 
     def to_DFA(self):
-        copied = self.__deepcopy__()
-        new_Q  = subgroups(copied.Q)
-        new_S  = copied.S
-        new_q0 = {copied.q0}
-        new_d  = copied.d_hat_hat
-        new_F  = subgroups_with_elements_of(copied.Q, copied.F)
+        """ build power-Automata (2^Q) """
+        copied = deepcopy(self)
+        new_Q  = subgroups(copied.Q)    # 2^Q
+        new_S  = copied.S               # S
+        new_q0 = {copied.q0}            # {q0}
+        new_d  = copied.d_hat_hat       # δ(P, a) := δ^^(P, a)
+        new_F  = subgroups_with_elements_of(copied.Q, copied.F)     # 2^Q ∩ F ≠ ∅
         return DFA(new_Q, new_S, new_q0, new_d, new_F)
 
 
@@ -132,82 +139,5 @@ TODO:
 """
 
 
-def _test():
-
-    def d(q, a):
-        if a == '0':
-            return {0}
-        if q == 0:
-            return {1}
-        return set()
-
-    A = NFA([0, 1], '01', 0, d, [1])
-    print('' in A)
-    print(A.d_hat(A.q0, ''))
-    # print('11' in A)
-    # print(A.d_hat(A.q0, '11'))
-    # print('10' in A)
-    # print(A.d_hat(A.q0, '10'))
-    print('101' in A)
-    print(A.d_hat(A.q0, '101'))
-    print(A.get_Ln(4), '\n')
-
-    DA = A.to_DFA()
-    print('' in DA)
-    print(DA.d_hat(DA.q0, ''))
-    # print('11' in DA)
-    # print(DA.d_hat(DA.q0, '11'))
-    # print('10' in DA)
-    # print(DA.d_hat(DA.q0, '10'))
-    print('101' in DA)
-    print(DA.d_hat(DA.q0, '101'))
-    print(DA.get_Ln(4), '\n')
-
-    # A.d = lambda q,a:{q}          # Checks if changes in A.d not affect d_hat_hat (i.e. DA.d)
-    # print('' in DA)
-    # print(DA.d_hat(DA.q0, ''))
-    # # print('11' in DA)
-    # # print(DA.d_hat(DA.q0, '11'))
-    # # print('10' in DA)
-    # # print(DA.d_hat(DA.q0, '10'))
-    # print('101' in DA)
-    # print(DA.d_hat(DA.q0, '101'))
-    # print(DA.get_Ln(4), '\n')
-
-    # for q in DA.Q:
-    #     for a in DA.S:
-    #         print('d({}, {}) = {}'.format(q, a, DA.d(q, a)))
-
-    # print('d^^({}, {}) = {}'.format(DA.q0, '11', DA.d_hat(DA.q0, '11')))
-    # print(DA.F)
-    print(len(DA.get_Ln(5))+1)
-
-    A.add_prefix('tom')
-    print(A.Q)
-    print(A.S)
-    print(A.q0)
-    print(A.F)
-    # for q in A.Q:
-    #     for a in A.S:
-    #         print('d({}, {}) = {}'.format(q, a, A.d(q, a)))
-    print(A.get_Ln(7))
-    print(A.get_Ln(4, 'tom'))
-
-    A.add_prefix('tom')
-    print(A.Q)
-    print(A.S)
-    print(A.q0)
-    print(A.F)
-    # for q in A.Q:
-    #     for a in A.S:
-    #         print('d({}, {}) = {}'.format(q, a, A.d(q, a)))
-    print(A.get_Ln(7))
-    print(A.get_Ln(4, 'tomtom'))
-
-    DA = A.to_DFA()
-    print(DA.get_Ln(7))
-    print(DA.get_Ln(4, 'tomtom'))
-
-
 if __name__ == '__main__':
-    _test()
+    pass

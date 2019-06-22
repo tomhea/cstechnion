@@ -22,7 +22,8 @@ class DFA:  # Deterministic Finite Automation
     def minimize(self):
         """ should 1. delete not-reachable states, and
                    2. remove identical states: q,p≠q0 equals if: d(q,a)=d(p,a) for all a∈Σ, and) q∈F iff q∈F
-                   3. change states names to integers from range(0, len(self.Q)) """
+                   3. change states names to integers from range(0, len(self.Q))
+                   4. find out about good algorithm for minimizing an Automata """
         pass  # TODO really do something
 
     def accept(self, w):
@@ -72,7 +73,8 @@ class DFA:  # Deterministic Finite Automation
                 return _pre
             count = 0
 
-    def add_prefix(self, w):
+    def add_prefix(self, w):    # for every v in self, wv in new_self
+                                # for example [even #0].add_prefix('tom') = (tom, tom1, tom00, tom11, tom100, tom010, tom001, ...)
         if len(w) > 0:
             _pre = self._first_pre_name()
             new_d = {}
@@ -82,7 +84,7 @@ class DFA:  # Deterministic Finite Automation
             for i in range(1, len(w)):
                 last_q, curr_q = curr_q, _pre + str(i)
                 self.Q.append(curr_q)
-                new_d[last_q, w[i - 1]] = curr_q
+                new_d[last_q, w[i - 1]] = curr_q        # q_i-1 --[W_i-1]--> q_i
             garbage_q = _pre + '_false'
             self.Q.append(garbage_q)
             new_d[curr_q, w[-1]] = self.q0
@@ -185,44 +187,7 @@ TODO:
 """
 
 
-def _test():
-
-    def d(q, a):
-        if q == 2:
-            return 2
-        if a == '0':
-            return 0
-        return q + 1
-
-    A = DFA([0, 1, 2], '01', 0, d, [1])
-    print('' in A)
-    print('11' in A)
-    print('10' in A)
-    print('101' in A)
-    print(A.to_regex())
-
-
-    def d2(q, a):
-        return q if a == '1' else 1-q
-
-
-    A2 = DFA([0, 1], '01', 0, d2, [0])
-    print(A2.to_regex())
-    # print(A.get_Ln(5, '10101'))
-    A.add_prefix('tom')
-    # print(A.Q)
-    # print(A.q0)
-    # print(A.d('_pre0', '0'))
-    # for q in A.Q:
-    #     for a in A.S:
-    #         print('d({},{})={}'.format(q, a, A.d(q, a)))
-    # print(A.d)
-    print(A.get_Ln(7))
-    A.add_prefix('tomtom')
-    print(A.get_Ln(8))
-
-
 if __name__ == '__main__':
-    _test()
+    pass
 
 

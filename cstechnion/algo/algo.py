@@ -1,8 +1,10 @@
 from heapq import heapify, heappop, heappush
-from cstechnion.mivne import BinTree
+
+from cstechnion.mivne.mivne import BinTree
 
 
 def get_char_hist(text):
+    """ generate the characters histogram from the given text """
     hist = {}
     for c in text:
         if c in hist:
@@ -27,6 +29,7 @@ def huffman(hist):
 
 
 def huffman_encode(text, huff_code):
+    """ replace every character in text with its huffman binary-representation """
     enc_text = ''
     huff_dict = dict(huff_code)
     for c in text:
@@ -35,6 +38,7 @@ def huffman_encode(text, huff_code):
 
 
 def huffman_decode(enc_text, huff_code):
+    """ convert every binary-code to the character it represents, and return the decoded text """
     dec_text = ''
     huff_dict = {b:c for c,b in huff_code}
     curr_bin = ''
@@ -48,23 +52,15 @@ def huffman_decode(enc_text, huff_code):
     return dec_text
 
 
-print(huffman([('A', 5), ('B', 2), ('C', 1), ('D', 1)]))
-
-text = 'Hi you guys!\nMy name is Tom.\n:)'
-hist = get_char_hist(text)
-huff_code = huffman(hist)
-enc_text = huffman_encode(text, huff_code)
-dec_text = huffman_decode(enc_text, huff_code)
-print(text == dec_text)
-
-
 """
 TODO:
-    after graphes implemented (in kombi...):
+    after graphes implemented (in Graph.py):
     add BFS, DFS
     add [Get SCC Graph]
     add Prim, Kruskal (minimal tree)
     add Dijkstra (shortest from s, without negative edges), Bellman-Ford (also, but without negative circles)
     add Johnson (shortest from general v->u)
     add Minimal Vertex Cover, and Knapsack problam (on tirgul 10)
+    
+    this file's name should be changed to huffman.py, or to be written in a algorithms.py file
 """
